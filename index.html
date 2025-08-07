@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=Luckiest+Guy&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(180deg, #a3d8f5 0%, #d0eaf8 100%);
+            overflow: hidden;
+            margin: 0;
+        }
+        
+        /* --- Start Screen --- */
+        #start-screen {
+            transition: opacity 0.5s ease-out;
+        }
+
+        .selection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .selection-item {
+            cursor: pointer;
+            border: 4px solid transparent;
+            transition: all 0.2s ease-in-out;
+            border-radius: 1rem;
+            position: relative;
+        }
+        
+        .selection-item:hover {
+            transform: scale(1.05);
+            border-color: #fde047;
+        }
+        
+        .selection-item.selected {
+            border-color: #facc15;
+            box-shadow: 0 0 20px rgba(250, 204, 21, 0.7);
+        }
+        
+        .selection-item .checkmark {
+            display: none;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            background-color: #facc15;
+            border-radius: 50%;
+            color: white;
+        }
+
+        .selection-item.selected .checkmark {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-button {
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 5px 0 #eab308;
+            border-color: #fde047;
+        }
+        .action-button:hover { 
+            filter: brightness(1.1);
+        }
+        .action-button:active { 
+            box-shadow: 0 3px 0 #eab308; 
+            filter: brightness(0.95);
+        }
+
+
+        /* --- Game Screen --- */
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .screen-shake-active {
+            animation: screen-shake 0.5s ease-out;
+        }
+        @keyframes screen-shake {
+            0%, 100% { transform: translate(0, 0); }
+            10%, 90% { transform: translate(-5px, 0) rotate(-1deg); }
+            20%, 80% { transform: translate(5px, 0) rotate(1deg); }
+            30%, 50%, 70% { transform: translate(-5px, 5px) rotate(0); }
+            40%, 60% { transform: translate(5px, -5px) rotate(0); }
+        }
+
+        #egg-wrapper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80vw;
+            height: 80vh;
+            max-width: 600px;
+            max-height: 700px;
+            transition: transform 0.2s ease-in-out, opacity 0.3s ease-out;
+            cursor: pointer;
+        }
+        #egg-wrapper:hover { transform: translate(-50%, -50%) scale(1.02); }
+        #egg-wrapper.shake {
+            animation: egg-shake 1.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes egg-shake {
+            10%, 90% { transform: translate(-50%, -50%) rotate(-1deg); }
+            20%, 80% { transform: translate(-50%, -50%) rotate(2deg); }
+            30%, 50%, 70% { transform: translate(-52%, -52%) rotate(-4deg); }
+            40%, 60% { transform: translate(-48%, -48%) rotate(4deg); }
+        }
+
+        #flash-overlay {
+            transition: opacity 0.5s ease-out;
+        }
+        #flash-overlay.flash {
+            animation: screen-flash 0.4s ease-out;
+        }
+        @keyframes screen-flash {
+            0% { opacity: 0.7; }
+            100% { opacity: 0; }
+        }
+
+        .shell-piece {
+            position: absolute;
+            pointer-events: none;
+            will-change: transform, opacity;
+        }
+        
+        .pet-display {
+            opacity: 0;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 1s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.5s;
+        }
+        .pet-display.stacked {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.5);
+        }
+        
+        .pet-animator.wiggling {
+            animation-name: wiggle;
+            animation-timing-function: ease-in-out;
+            animation-iteration-count: infinite;
+        }
+
+        .pet-image {
+            transition: transform 0.3s ease;
+        }
+        .pet-display:hover .pet-image {
+             transform: scale(1.15) rotate(-5deg) translateY(-10px);
+        }
+        
+        @keyframes wiggle {
+            0%   { transform: translate(0px, 0px); }
+            25%  { transform: translate(-8px, -10px); }
+            50%  { transform: translate(0px, 0px); }
+            75%  { transform: translate(8px, -10px); }
+            100% { transform: translate(0px, 0px); }
+        }
+
+        .pet-glow-divine {
+            animation: pet-glow-divine-anim 2s ease-in-out infinite alternate;
+        }
+        @keyframes pet-glow-divine-anim {
+            from { filter: drop-shadow(0 0 10px #ffd700) drop-shadow(0 0 15px #ffffff); }
+            to { filter: drop-shadow(0 0 20px #ffec80) drop-shadow(0 0 30px #ffffff); }
+        }
+
+        .pet-glow-prismatic {
+            animation: pet-glow-prismatic-anim 4s linear infinite;
+        }
+        @keyframes pet-glow-prismatic-anim {
+            0% { filter: drop-shadow(0 0 18px #ff00de); }
+            25% { filter: drop-shadow(0 0 18px #00ffea); }
+            50% { filter: drop-shadow(0 0 18px #51ff00); }
+            75% { filter: drop-shadow(0 0 18px #ff9500); }
+            100% { filter: drop-shadow(0 0 18px #ff00de); }
+        }
+
+        /* --- Modal Styles --- */
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            transition: opacity 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div id="start-screen" class="absolute inset-0 bg-sky-100/50 backdrop-blur-sm z-50 p-4 md:p-8 flex flex-col items-center justify-center">
+        <h1 class="text-3xl sm:text-4xl md:text-6xl font-bold text-white text-center mb-4 md:mb-8" style="font-family: 'Luckiest Guy', cursive; text-shadow: 0 4px 6px rgba(0,0,0,0.15);">Create Your Hatch</h1>
+        
+        <div class="w-full max-w-4xl">
+            <h2 class="text-xl md:text-2xl font-bold text-white mb-4 text-center">1. Choose Your Egg</h2>
+            <div id="egg-selection" class="selection-grid bg-white/30 p-4 rounded-2xl mb-6 md:mb-8">
+                <div class="selection-item p-2" data-egg-src="eggs/Zenegg.png">
+                    <img src="eggs/Zenegg.png" class="w-full h-full object-contain rounded-lg" onerror="this.onerror=null;this.src='https://placehold.co/200x250/e9d5ff/ffffff?text=Zen+Egg';">
+                    <div class="checkmark">✔</div>
+                </div>
+                 <div class="selection-item p-2" data-egg-src="eggs/Bugeggimage.png">
+                    <img src="eggs/Bugeggimage.png" class="w-full h-full object-contain rounded-lg" onerror="this.onerror=null;this.src='https://placehold.co/200x250/a3e635/ffffff?text=Bug+Egg';">
+                    <div class="checkmark">✔</div>
+                </div>
+                 <div class="selection-item p-2" data-egg-src="eggs/Night_Egg.png">
+                    <img src="eggs/Night_Egg.png" class="w-full h-full object-contain rounded-lg" onerror="this.onerror=null;this.src='https://placehold.co/200x250/4c1d95/ffffff?text=Night+Egg';">
+                    <div class="checkmark">✔</div>
+                </div>
+            </div>
+
+            <h2 class="text-xl md:text-2xl font-bold text-white mb-4 text-center">2. Choose 2 to 4 Pets</h2>
+            <div id="pet-selection" class="selection-grid bg-white/30 p-4 rounded-2xl max-h-48 md:max-h-64 overflow-y-auto">
+                <!-- Pets will be populated by JS -->
+            </div>
+        </div>
+
+        <button id="start-button" class="action-button font-bold mt-6 md:mt-8 px-6 py-3 text-2xl md:px-8 md:py-4 md:text-3xl bg-yellow-400 text-white rounded-full border-4 opacity-50 pointer-events-none">Hatch Your Egg!</button>
+    </div>
+
+    <div id="game-container" class="hidden">
+        <div id="flash-overlay" class="fixed inset-0 bg-white opacity-0 pointer-events-none z-50"></div>
+        
+        <div id="egg-wrapper" class="flex items-center justify-center">
+            <img id="egg" src="" alt="A magical zen egg" class="w-full h-full object-contain" onerror="this.onerror=null;this.src='https://placehold.co/600x700/e9d5ff/000000?text=Zen+Egg';">
+        </div>
+        
+        <div id="shell-container" class="absolute inset-0 w-full h-full pointer-events-none"></div>
+
+        <div id="pets-container" class="absolute inset-0 w-full h-full pointer-events-none">
+            <!-- Chosen pets will be populated here -->
+        </div>
+        
+        <button id="get-pets-button" class="action-button font-bold px-6 py-3 text-xl md:px-8 md:py-4 md:text-3xl bg-yellow-400 text-white rounded-full border-4 absolute bottom-10 left-1/2 -translate-x-1/2 opacity-0 transition-opacity duration-500 pointer-events-none">GET THEM ALL</button>
+    </div>
+
+    <!-- Nickname Modal -->
+    <div id="nickname-modal" class="modal-overlay hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 md:p-8 w-full max-w-md text-center">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4">Claim Your Pets!</h2>
+            <p class="text-gray-600 mb-6">Enter your nickname to add these pets to your collection.</p>
+            <form id="nickname-form">
+                <input type="text" id="nickname-input" placeholder="Enter nickname..." class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent outline-none" required>
+                <button type="submit" class="action-button w-full mt-4 font-bold px-8 py-3 text-lg md:text-xl bg-yellow-400 text-white rounded-full border-4">Claim</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="modal-overlay hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md text-center cursor-pointer">
+            <h2 class="text-2xl md:text-3xl font-bold text-green-500 mb-4">Success!</h2>
+            <p class="text-gray-600">Your new pets have been added to your collection!</p>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const startScreen = document.getElementById('start-screen');
+        const eggSelectionContainer = document.getElementById('egg-selection');
+        const petSelectionContainer = document.getElementById('pet-selection');
+        const startButton = document.getElementById('start-button');
+        
+        const gameContainer = document.getElementById('game-container');
+        const eggWrapper = document.getElementById('egg-wrapper');
+        const eggImage = document.getElementById('egg');
+        const shellContainer = document.getElementById('shell-container');
+        const petsContainer = document.getElementById('pets-container');
+        const flashOverlay = document.getElementById('flash-overlay');
+        const getPetsButton = document.getElementById('get-pets-button');
+        
+        const nicknameModal = document.getElementById('nickname-modal');
+        const successModal = document.getElementById('success-modal');
+        const nicknameForm = document.getElementById('nickname-form');
+
+        // --- Game State ---
+        let isHatching = false;
+        let animationFrameId;
+        let shellPieces = [];
+        let selectedEggSrc = 'eggs/Zenegg.png';
+        let selectedPets = [];
+        
+        const petImageUrls = [
+            "pets/rbl-raccoon-roblox-other-items-4948.jpg", "pets/rbl-dragonfly-roblox-other-items-4949.jpg", "pets/rbl-kitsune-roblox-other-items-476.jpg", "pets/rbl-corrupted-kitsune-roblox-other-items-558.jpg", "pets/rbl-disco-bee-roblox-other-items-6117.jpg", "pets/rbl-butterfly-roblox-other-items-6118.jpg", "pets/rbl-t-rex-roblox-other-items-6384.jpg", "pets/rbl-spinosaurus-roblox-other-items-6444.jpg", "pets/rbl-queen-bee-roblox-other-items-6051.png", "pets/rbl-mimic-octopus-roblox-other-items-6247.jpg", "pets/rbl-fennec-fox-roblox-other-items-6307.jpg", "pets/rbl-red-fox-roblox-other-items-4950.jpg", "pets/rbl-chicken-zombie-roblox-other-items-4959.jpg", "pets/rbl-moon-cat-roblox-other-items-6082.jpg", "pets/rbl-blood-owl-roblox-other-items-4960.jpg", "pets/rbl-blood-hedgehog-roblox-other-items-4961.jpg", "pets/rbl-blood-kiwi-roblox-other-items-4962.jpg", "pets/rbl-capybara-roblox-other-items-6245.jpg", "pets/rbl-dilophosaurus-roblox-other-items-6442.jpg", "pets/rbl-moth-roblox-other-items-6119.jpg", "pets/rbl-night-owl-roblox-other-items-5000.jpg", "pets/rbl-brontosaurus-roblox-other-items-6385.jpg", "pets/rbl-bunny-roblox-other-items-6053.jpg", "pets/rbl-golden-lab-roblox-other-items-6055.jpg", "pets/rbl-bee-roblox-other-items-6056.jpg", "pets/rbl-black-bunny-roblox-other-items-6057.jpg", "pets/rbl-chicken-roblox-other-items-6058.jpg", "pets/rbl-deer-roblox-other-items-6059.jpg", "pets/rbl-orange-tabby-roblox-other-items-6060.jpg", "pets/rbl-rooster-roblox-other-items-6062.jpg", "pets/rbl-spotted-deer-roblox-other-items-6063.jpg", "pets/rbl-honey-bee-roblox-other-items-6064.jpg", "pets/rbl-sea-otter-roblox-other-items-6066.jpg", "pets/rbl-silver-monkey-roblox-other-items-6067.jpg", "pets/rbl-petal-bee-roblox-other-items-6068.jpg", "pets/rbl-brown-mouse-roblox-other-items-6069.jpg", "pets/rbl-caterpillar-roblox-other-items-6070.jpg", "pets/rbl-giant-ant-roblox-other-items-6071.jpg", "pets/rbl-grey-mouse-roblox-other-items-6072.jpg", "pets/rbl-red-giant-ant-roblox-other-items-6073.jpg", "pets/rbl-snail-roblox-other-items-6074.jpg", "pets/rbl-squirrel-roblox-other-items-6075.jpg", "pets/rbl-bear-bee-roblox-other-items-6076.jpg", "pets/rbl-hedgehog-roblox-other-items-6077.jpg", "pets/rbl-kiwi-roblox-other-items-6078.jpg", "pets/rbl-panda-roblox-other-items-6079.jpg", "pets/rbl-frog-roblox-other-items-6080.jpg", "pets/rbl-peacock-roblox-other-items-6244.jpg", "pets/rbl-scarlet-macaw-roblox-other-items-6246.jpg", "pets/rbl-starfish-roblox-other-items-6248.jpg", "pets/rbl-seagull-roblox-other-items-6249.jpg", "pets/rbl-crab-roblox-other-items-6250.jpg", "pets/rbl-flamingo-roblox-other-items-6251.jpg", "pets/rbl-oragutan-roblox-other-items-6252.jpg", "pets/rbl-seal-roblox-other-items-6253.jpg", "pets/rbl-sea-turtle-roblox-other-items-6254.jpg", "pets/rbl-toucan-roblox-other-items-6255.jpg", "pets/rbl-sand-snake-roblox-other-items-6304.jpg", "pets/rbl-axolotl-roblox-other-items-6305.jpg", "pets/rbl-hyacinth-macaw-roblox-other-items-6306.jpg", "pets/rbl-hamster-roblox-other-items-6308.jpg", "pets/rbl-pterodactyl-roblox-other-items-6386.jpg", "pets/rbl-stegosaurus-roblox-other-items-6387.jpg", "pets/rbl-triceratops-roblox-other-items-6388.jpg", "pets/rbl-raptor-roblox-other-items-6389.jpg", "pets/rbl-bald-eagle-roblox-other-items-6390.jpg", "pets/rbl-parasaurolophus-roblox-other-items-6439.jpg", "pets/rbl-iguanodon-roblox-other-items-6440.jpg", "pets/rbl-pachycephalosaurus-roblox-other-items-6441.jpg", "pets/rbl-ankylosaurus-roblox-other-items-6443.jpg", "pets/rbl-kappa-roblox-other-items-481.jpg", "pets/rbl-tanchozuru-roblox-other-items-486.jpg", "pets/rbl-tanuki-roblox-other-items-491.jpg", "pets/rbl-nihonzaru-roblox-other-items-496.jpg", "pets/rbl-shiba-inu-roblox-other-items-501.jpg", "pets/rbl-koi-roblox-other-items-517.jpg", "pets/rbl-kodama-roblox-other-items-563.jpg", "pets/rbl-corrupted-kodama-roblox-other-items-581.jpg", "pets/rbl-football-roblox-other-items-632.jpg", "pets/rbl-french-fry-ferret-roblox-other-items-686.jpg", "pets/rbl-spaghetti-sloth-roblox-other-items-660.png", "pets/rbl-sushi-bear-roblox-other-items-665.png", "pets/rbl-pancake-mole-roblox-other-items-670.png", "pets/rbl-bagel-bunny-roblox-other-items-675.png", "pets/rbl-mochi-mouse-roblox-other-items-680.png"
+        ];
+
+        // --- Start Screen Logic ---
+        function populatePets() {
+            petImageUrls.forEach(url => {
+                const petItem = document.createElement('div');
+                petItem.className = 'selection-item p-2';
+                petItem.dataset.petSrc = url;
+                petItem.innerHTML = `
+                    <img src="${url}" class="w-full h-full object-contain rounded-lg bg-white/50">
+                    <div class="checkmark">✔</div>
+                `;
+                petSelectionContainer.appendChild(petItem);
+            });
+        }
+
+        function updateStartButton() {
+            if (selectedEggSrc && selectedPets.length >= 2 && selectedPets.length <= 4) {
+                startButton.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                startButton.classList.add('opacity-50', 'pointer-events-none');
+            }
+        }
+
+        eggSelectionContainer.addEventListener('click', (e) => {
+            const item = e.target.closest('.selection-item');
+            if (!item) return;
+            
+            eggSelectionContainer.querySelectorAll('.selection-item').forEach(el => el.classList.remove('selected'));
+            item.classList.add('selected');
+            selectedEggSrc = item.dataset.eggSrc;
+            updateStartButton();
+        });
+
+        petSelectionContainer.addEventListener('click', (e) => {
+            const item = e.target.closest('.selection-item');
+            if (!item) return;
+
+            const petSrc = item.dataset.petSrc;
+            const index = selectedPets.indexOf(petSrc);
+
+            if (index > -1) {
+                selectedPets.splice(index, 1);
+                item.classList.remove('selected');
+            } else {
+                if (selectedPets.length < 4) {
+                    selectedPets.push(petSrc);
+                    item.classList.add('selected');
+                }
+            }
+            updateStartButton();
+        });
+
+        startButton.addEventListener('click', () => {
+            if (selectedEggSrc && selectedPets.length >= 2 && selectedPets.length <= 4) {
+                eggImage.src = selectedEggSrc;
+                
+                petsContainer.innerHTML = '';
+                selectedPets.forEach((src, i) => {
+                    const petDisplay = document.createElement('div');
+                    petDisplay.id = `pet${i + 1}`;
+                    petDisplay.className = 'pet-display w-1/3 md:w-1/4';
+                    
+                    const glowClass = Math.random() > 0.3 ? 'pet-glow-divine' : 'pet-glow-prismatic';
+
+                    petDisplay.innerHTML = `
+                        <div class="pet-animator">
+                            <img src="${src}" class="pet-image ${glowClass} w-full h-auto object-contain max-w-xs" onerror="this.onerror=null;this.src='https://placehold.co/300x300/cccccc/000000?text=Pet';">
+                        </div>
+                    `;
+                    petsContainer.appendChild(petDisplay);
+                });
+
+
+                startScreen.style.opacity = '0';
+                setTimeout(() => {
+                    startScreen.classList.add('hidden');
+                    gameContainer.classList.remove('hidden');
+                }, 500);
+            }
+        });
+
+
+        // --- Game Logic ---
+        function animateShells() {
+            if (shellPieces.length === 0) {
+                cancelAnimationFrame(animationFrameId);
+                return;
+            }
+            const gravity = 0.5;
+            shellPieces.forEach((piece, index) => {
+                piece.vy += gravity;
+                piece.x += piece.vx;
+                piece.y += piece.vy;
+                piece.rotation += piece.rotationSpeed;
+                piece.element.style.transform = `translate(${piece.x}px, ${piece.y}px) rotate(${piece.rotation}deg)`;
+                if (piece.y > window.innerHeight + 100) {
+                    piece.element.remove();
+                    shellPieces.splice(index, 1);
+                }
+            });
+            animationFrameId = requestAnimationFrame(animateShells);
+        }
+
+        function createEggFragments() {
+            shellContainer.innerHTML = '';
+            shellPieces = [];
+            const eggRect = eggWrapper.getBoundingClientRect();
+            const eggImageUrl = eggImage.src;
+
+            const rows = 10;
+            const cols = 10;
+            const pieceWidth = eggRect.width / cols;
+            const pieceHeight = eggRect.height / rows;
+
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const element = document.createElement('div');
+                    element.classList.add('shell-piece');
+                    element.style.backgroundImage = `url(${eggImageUrl})`;
+                    element.style.backgroundSize = `${eggRect.width}px ${eggRect.height}px`;
+                    element.style.backgroundPosition = `-${j * pieceWidth}px -${i * pieceHeight}px`;
+                    element.style.width = `${pieceWidth}px`;
+                    element.style.height = `${pieceHeight}px`;
+                    
+                    const startX = eggRect.left + j * pieceWidth;
+                    const startY = eggRect.top + i * pieceHeight;
+                    
+                    element.style.left = `${startX}px`;
+                    element.style.top = `${startY}px`;
+
+                    shellContainer.appendChild(element);
+                    
+                    const angle = Math.random() * 360;
+                    const speed = Math.random() * 25 + 15;
+                    
+                    shellPieces.push({
+                        element: element,
+                        x: 0, y: 0,
+                        vx: Math.cos(angle * Math.PI / 180) * speed + (Math.random() - 0.5) * 10,
+                        vy: Math.sin(angle * Math.PI / 180) * speed - 25,
+                        rotation: 0,
+                        rotationSpeed: Math.random() * 20 - 10,
+                    });
+                }
+            }
+            animateShells();
+        }
+
+        function hatchEgg() {
+            if (isHatching) return;
+            isHatching = true;
+            
+            eggWrapper.classList.add('shake');
+
+            setTimeout(() => {
+                eggWrapper.style.opacity = '0';
+                document.body.classList.add('screen-shake-active');
+                flashOverlay.classList.add('flash');
+                setTimeout(() => {
+                    flashOverlay.classList.remove('flash');
+                    document.body.classList.remove('screen-shake-active');
+                }, 500);
+
+                createEggFragments();
+
+                setTimeout(() => {
+                    document.querySelectorAll('#pets-container .pet-display').forEach(pet => pet.classList.add('stacked'));
+                }, 400);
+
+                setTimeout(() => {
+                    const pets = petsContainer.querySelectorAll('.pet-display');
+                    if (pets.length === 2) {
+                        pets[0].style.transform = `translate(-80%, -75%) scale(1.5)`;
+                        pets[1].style.transform = `translate(-20%, -75%) scale(1.5)`;
+                    } else if (pets.length === 3) {
+                        pets[0].style.transform = `translate(-100%, -60%) scale(1.5)`;
+                        pets[1].style.transform = `translate(-50%, -110%) scale(1.5)`;
+                        pets[2].style.transform = `translate(0%, -40%) scale(1.5)`;
+                    } else if (pets.length === 4) {
+                        pets[0].style.transform = `translate(-120%, -90%) scale(1.5)`;
+                        pets[1].style.transform = `translate(20%, -90%) scale(1.5)`;
+                        pets[2].style.transform = `translate(-120%, -30%) scale(1.5)`;
+                        pets[3].style.transform = `translate(20%, -30%) scale(1.5)`;
+                    }
+                    
+                    pets.forEach(pet => {
+                        const animator = pet.querySelector('.pet-animator');
+                        pet.addEventListener('transitionend', () => {
+                            const duration = Math.random() * 2 + 2;
+                            animator.style.animationDuration = `${duration}s`;
+                            animator.classList.add('wiggling');
+                        }, { once: true });
+                    });
+
+                }, 1000);
+                
+                setTimeout(() => {
+                    getPetsButton.classList.remove('opacity-0', 'pointer-events-none');
+                }, 2500);
+
+
+            }, 1500);
+        }
+
+        function resetAnimation() {
+            if (!isHatching && !successModal.classList.contains('hidden')) {
+                successModal.classList.add('hidden');
+                 successModal.classList.remove('flex');
+            } else if (!isHatching) {
+                return;
+            }
+            
+            document.querySelectorAll('#pets-container .pet-display').forEach(pet => {
+                pet.classList.remove('stacked');
+                const animator = pet.querySelector('.pet-animator');
+                animator.classList.remove('wiggling');
+                animator.style.animationDuration = '';
+                animator.style.animationDelay = '';
+                pet.style.transform = 'translate(-50%, -50%) scale(0)';
+            });
+
+            getPetsButton.classList.add('opacity-0', 'pointer-events-none');
+            nicknameModal.classList.add('hidden');
+            nicknameModal.classList.remove('flex');
+            successModal.classList.add('hidden');
+            successModal.classList.remove('flex');
+
+
+            setTimeout(() => {
+                shellContainer.innerHTML = '';
+                shellPieces = [];
+                cancelAnimationFrame(animationFrameId);
+                eggWrapper.classList.remove('shake');
+                eggWrapper.style.opacity = '1';
+                isHatching = false;
+
+                startScreen.classList.remove('hidden');
+                setTimeout(() => startScreen.style.opacity = '1', 50);
+                gameContainer.classList.add('hidden');
+            }, 500);
+        }
+        
+        // --- Initialization ---
+        
+        eggSelectionContainer.querySelector('.selection-item').classList.add('selected');
+        
+        populatePets();
+        updateStartButton();
+
+        eggWrapper.addEventListener('click', (event) => {
+            event.stopPropagation(); 
+            if (!isHatching) {
+                hatchEgg();
+            }
+        });
+
+        gameContainer.addEventListener('click', (e) => {
+            if (isHatching && e.target === gameContainer) {
+                 resetAnimation();
+            }
+        });
+
+        getPetsButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            nicknameModal.classList.remove('hidden');
+            nicknameModal.classList.add('flex');
+        });
+
+        nicknameForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            nicknameModal.classList.add('hidden');
+            nicknameModal.classList.remove('flex');
+            successModal.classList.remove('hidden');
+            successModal.classList.add('flex');
+        });
+
+        successModal.addEventListener('click', () => {
+             resetAnimation();
+        });
+
+
+    </script>
+</body>
+</html>
